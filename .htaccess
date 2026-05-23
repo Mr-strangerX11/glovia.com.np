@@ -1,0 +1,80 @@
+# .htaccess — glovia.com.np (Next.js Frontend)
+# Place this file in the root of your cPanel domain document root.
+
+Options -Indexes
+ServerSignature Off
+
+# ─── Force HTTPS ──────────────────────────────────────────────────────────────
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ─── www → non-www redirect ───────────────────────────────────────────────────
+RewriteCond %{HTTP_HOST} ^www\.glovia\.com\.np [NC]
+RewriteRule ^(.*)$ https://glovia.com.np/$1 [R=301,L]
+
+# ─── Security Headers ─────────────────────────────────────────────────────────
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  Header unset Server
+  Header unset X-Powered-By
+
+  # Cache static Next.js assets forever (they have content hashes)
+  <FilesMatch "\.(js|css|woff|woff2|ico|svg|png|jpg|jpeg|webp|avif)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
+
+# ─── Block access to sensitive files ──────────────────────────────────────────
+<FilesMatch "(\.env|\.env\..*|\.git|package\.json|tsconfig.*)$">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
+
+# ─── Serve Next.js static files directly from _next/static ───────────────────
+# cPanel's NodeJS Selector proxies to Node.js, but for pure static requests
+# we can serve them directly via Apache for performance.
+<IfModule mod_alias.c>
+  Alias /_next/static /home/<YOUR_CPANEL_USER>/glovia.com.np/.next/static
+  <Directory /home/<YOUR_CPANEL_USER>/glovia.com.np/.next/static>
+    Options -Indexes
+    AllowOverride None
+    Require all granted
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </Directory>
+
+  Alias /public /home/<YOUR_CPANEL_USER>/glovia.com.np/public
+  <Directory /home/<YOUR_CPANEL_USER>/glovia.com.np/public>
+    Options -Indexes
+    AllowOverride None
+    Require all granted
+  </Directory>
+</IfModule>
+
+# ─── Proxy all other requests to Next.js Node.js app ─────────────────────────
+<IfModule mod_proxy.c>
+  ProxyRequests Off
+  ProxyPreserveHost On
+
+  # Skip proxy for static files served directly by Apache
+  RewriteCond %{REQUEST_URI} !^/_next/static/
+  RewriteCond %{REQUEST_URI} !^/public/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+
+  <Proxy *>
+    Order deny,allow
+    Allow from all
+  </Proxy>
+</IfModule>
+
+# ─── Compression ──────────────────────────────────────────────────────────────
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json
+  AddOutputFilterByType DEFLATE image/svg+xml text/xml application/xml
+</IfModule>
