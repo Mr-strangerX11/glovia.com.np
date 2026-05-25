@@ -1,23 +1,33 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
+
+function getCsrfToken(): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const match = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith('csrf_token='));
+  if (!match) return undefined;
+  try {
+    return decodeURIComponent(match.split('=')[1]);
+  } catch {
+    return match.split('=')[1];
+  }
+}
 
 const api = axios.create({
-  // Default to local backend in development to avoid hitting remote DNS/timeouts
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
   withCredentials: true,
-  // Increase timeout for slow local dev environments and remote APIs
   timeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS) || 30000,
 });
 
 api.interceptors.request.use(
   (config) => {
-    if (typeof window !== 'undefined' && config && config.method && config.method.toLowerCase() !== 'get') {
-      const csrf = Cookies.get('csrf_token');
+    const method = config.method?.toLowerCase() || '';
+    if (['post', 'put', 'patch', 'delete'].includes(method)) {
+      const csrf = getCsrfToken();
       if (csrf) {
-        config.headers = config.headers || {};
         config.headers['x-csrf-token'] = csrf;
       }
     }

@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import Cookies from 'js-cookie';
 import { authAPI } from '@/lib/api';
 import { User } from '@/types';
 

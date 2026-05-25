@@ -1,6 +1,18 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
-import Cookies from 'js-cookie';
 import { toast } from 'react-hot-toast';
+
+function getCsrfToken(): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const match = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith('csrf_token='));
+  if (!match) return undefined;
+  try {
+    return decodeURIComponent(match.split('=')[1]);
+  } catch {
+    return match.split('=')[1];
+  }
+}
 
 // Types for API responses
 export interface ApiError {
@@ -33,9 +45,8 @@ api.interceptors.request.use(
   (config) => {
     // Use HttpOnly cookies for auth; attach CSRF token for mutating requests only.
     if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase() || '')) {
-      const csrfToken = Cookies.get('csrf_token');
+      const csrfToken = getCsrfToken();
       if (csrfToken) {
-        config.headers = config.headers || {};
         config.headers['x-csrf-token'] = csrfToken;
       }
     }
