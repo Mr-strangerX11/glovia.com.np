@@ -9,61 +9,67 @@ import {
 import { uploadAPI } from "@/lib/api";
 
 // ─── CSV Template ──────────────────────────────────────────────────────────────
+// Matches the user's CSV export format exactly.
 const CSV_HEADERS = [
-  "Product Name", "Slug", "Description", "Price(NRP)", "Discount(%)",
-  "Stock Quantity", "SKU", "Category", "Brand", "Vendor",
-  "Product Images", "Featured Product", "New Arrival",
+  "name", "slug", "description", "price", "compareAtPrice", "sku", "ML/GM",
+  "stockQuantity", "categoryId", "Sub-categoryId", "brandId",
+  "ingredients", "benefits", "howToUse",
+  "isFeatured", "isBestSeller", "isNew", "tags", "imageUrls",
+  "vendorEmail", "vendorId", "vendorName",
 ];
 
 const CSV_SAMPLE_ROWS = [
   [
     "COSRX Snail Mucin Essence", "cosrx-snail-mucin-essence",
     "Hydrating essence with snail mucin for skin repair",
-    "1800", "10", "50", "COSRX-SNAIL-100ML",
-    "Beauty", "COSRX", "",
-    "https://example.com/snail1.jpg", "false", "true",
-  ],
-  [
-    "Wai Wai Instant Noodles", "waiwai-instant-noodles",
-    "Popular instant noodles snack in Nepal",
-    "20", "5", "500", "WAI-NOODLE-75",
-    "Groceries", "Wai Wai", "",
-    "https://example.com/waiwai.jpg", "true", "false",
+    "1800", "2200", "COSRX-SNAIL-100ML", "100ml",
+    "50", "Beauty", "essence", "COSRX",
+    "Snail Secretion Filtrate", "Repairs and hydrates skin", "Apply after toner morning and night",
+    "FALSE", "FALSE", "TRUE", "snail mucin", "",
+    "vendor@example.com", "", "Vendor Name",
   ],
 ];
 
 function normalizeRow(raw: Record<string, string>): Record<string, string> {
   const clean: Record<string, string> = {};
   for (const [k, v] of Object.entries(raw)) {
-    clean[k.replace(/^\uFEFF/, "").trim()] = v;
+    clean[k.replace(/^\uFEFF/, "").trim()] = (v ?? "").trim();
   }
   const get = (...keys: string[]) => {
     for (const k of keys) {
-      if (clean[k] !== undefined && clean[k] !== "") return clean[k];
+      if (clean[k] !== undefined && clean[k] !== "") return clean[k].trim();
     }
     return "";
   };
-  const parseBool = (v: string) => (v.toLowerCase() === "true" || v.toUpperCase() === "TRUE" ? "true" : "false");
+  const parseBool = (v: string) => v.trim().toLowerCase() === "true" ? "true" : "false";
+
+  // Vendor: prefer vendorEmail for backend email-based lookup;
+  // fall back to vendorId only if it looks like a real ObjectId.
+  const vendorEmail = get("vendorEmail", "Vendor Email");
+  const vendorIdRaw = get("vendorId", "Vendor", "vendor");
+  const vendor = vendorEmail || vendorIdRaw;
+
   return {
-    name:               get("Product Name", "name"),
-    slug:               get("Slug", "slug"),
-    description:        get("Description", "description"),
-    price:              get("Price(NRP)", "Price", "price"),
-    discountPercentage: get("Discount(%)", "Discount", "discountPercentage"),
-    stockQuantity:      get("Stock Quantity", "stockQuantity"),
-    sku:                get("SKU", "sku"),
-    category:           get("Category", "category", "categoryId"),
-    brand:              get("Brand", "brand", "brandId"),
-    vendor:             get("Vendor", "vendor", "vendorId"),
-    imageUrls:          get("Product Images", "imageUrls", "images"),
-    isFeatured:         parseBool(get("Featured Product", "isFeatured")),
-    isBestSeller:       parseBool(get("isBestSeller")),
-    isNew:              parseBool(get("New Arrival", "isNew")),
-    tags:               get("tags"),
-    ingredients:        get("ingredients"),
-    benefits:           get("benefits"),
-    howToUse:           get("howToUse"),
-    compareAtPrice:     get("compareAtPrice"),
+    name:               get("name", "Product Name"),
+    slug:               get("slug", "Slug"),
+    description:        get("description", "Description"),
+    price:              get("price", "Price(NRP)", "Price"),
+    compareAtPrice:     get("compareAtPrice", "Compare At Price"),
+    sku:                get("sku", "SKU"),
+    quantityMl:         get("ML/GM", "quantityMl", "ML", "GM"),
+    stockQuantity:      get("stockQuantity", "Stock Quantity"),
+    category:           get("categoryId", "Category", "category"),
+    brand:              get("brandId", "Brand", "brand"),
+    vendor,
+    ingredients:        get("ingredients", "Ingredients"),
+    benefits:           get("benefits", "Benefits"),
+    howToUse:           get("howToUse", "How To Use"),
+    isFeatured:         parseBool(get("isFeatured", "Featured Product")),
+    isBestSeller:       parseBool(get("isBestSeller", "Best Seller")),
+    isNew:              parseBool(get("isNew", "New Arrival")),
+    tags:               get("tags", "Tags"),
+    imageUrls:          get("imageUrls", "Product Images", "images"),
+    discountPercentage: get("discountPercentage", "Discount(%)", "Discount"),
   };
 }
 
@@ -354,14 +360,15 @@ export default function BulkProductUpload({ onSubmit }: Props) {
           </div>
 
           <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-800">
-            <p className="mb-2 flex items-center gap-2 font-bold"><AlertTriangle className="h-4 w-4" /> Before uploading:</p>
+            <p className="mb-2 flex items-center gap-2 font-bold"><AlertTriangle className="h-4 w-4" /> CSV column guide:</p>
             <ul className="space-y-1 pl-6 text-xs list-disc">
-              <li><strong>Category</strong> — exact category name (e.g. <code className="rounded bg-amber-100 px-1">Beauty</code>) or MongoDB ObjectId.</li>
-              <li><strong>Brand</strong> — brand name or leave blank.</li>
-              <li><strong>Vendor</strong> — vendor&apos;s email address or leave blank.</li>
-              <li>SKU and Slug must be unique across all products.</li>
-              <li>Boolean fields (<strong>Featured Product</strong>, <strong>New Arrival</strong>): <code className="rounded bg-amber-100 px-1">true</code> or <code className="rounded bg-amber-100 px-1">false</code>.</li>
-              <li><strong>Product Images</strong>: leave blank — you can upload images directly after importing the CSV.</li>
+              <li><strong>categoryId</strong> — category name (e.g. <code className="rounded bg-amber-100 px-1">Beauty</code>) or MongoDB ObjectId.</li>
+              <li><strong>brandId</strong> — brand name (e.g. <code className="rounded bg-amber-100 px-1">Anua</code>) or leave blank.</li>
+              <li><strong>vendorEmail</strong> — vendor&apos;s registered email address (e.g. <code className="rounded bg-amber-100 px-1">vendor@email.com</code>).</li>
+              <li><strong>ML/GM</strong> — product size/volume (e.g. <code className="rounded bg-amber-100 px-1">30ml</code>, <code className="rounded bg-amber-100 px-1">50g</code>).</li>
+              <li><strong>isFeatured / isBestSeller / isNew</strong> — use <code className="rounded bg-amber-100 px-1">TRUE</code> or <code className="rounded bg-amber-100 px-1">FALSE</code>.</li>
+              <li><strong>imageUrls</strong> — leave blank and upload images directly in preview step.</li>
+              <li>SKU and slug must be unique across all products.</li>
             </ul>
           </div>
 
