@@ -247,7 +247,6 @@ export const adminAPI = {
   createProduct: (data: any) => api.post('/admin/products', data),
   updateProduct: (id: string, data: any) => api.put(`/admin/products/${id}`, data),
   deleteProduct: (id: string) => api.delete(`/admin/products/${id}`),
-  restoreProduct: (id: string) => api.patch(`/admin/products/${id}/restore`),
   // Products Bulk
   bulkCreateProducts: (products: any[]) => api.post('/admin/products/bulk', { products }),
   // Brands
