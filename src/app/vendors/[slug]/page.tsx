@@ -1,63 +1,63 @@
-import axios from "axios";
 import { notFound } from "next/navigation";
 import type { Metadata } from 'next';
 import VendorStoreContent from "./VendorStoreContent.client";
-import { getServerErrorSummary } from "@/lib/serverError";
 
 export const dynamic = "force-dynamic";
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://backend.glovia.com.np/api/v1').replace(/\/+$/, '');
-const TIMEOUT = 12000;
+const API = (process.env.NEXT_PUBLIC_API_URL || 'https://backend.glovia.com.np/api/v1').replace(/\/+$/, '');
 
 type Props = { params: { slug: string } };
 
-function isNextInternalError(err: unknown) {
-  const digest = (err as any)?.digest ?? '';
-  return typeof digest === 'string' && digest.startsWith('NEXT_');
-}
-
-/**
- * Resolve vendor by slug — supports both:
- *   - name slug   "kashi-chaudhary"  → GET /vendors/store/:slug  (after backend update)
- *   - MongoDB _id "6a13f8..."        → GET /vendors/:id/profile  (current backend)
- * Tries store endpoint first, falls back to profile endpoint so both work.
- */
-async function fetchVendorBySlug(slug: string) {
-  // Try store endpoint (name slug lookup — works once backend is updated)
+async function resolveVendor(slug: string) {
+  // 1. Try name-slug endpoint: GET /vendors/store/:slug
   try {
-    const res = await axios.get(`${API_BASE}/vendors/store/${slug}`, { timeout: TIMEOUT });
-    const vendor = res.data?.vendor;
-    if (vendor) return vendor;
-  } catch {
-    // fall through to profile endpoint
-  }
+    const r = await fetch(`${API}/vendors/store/${encodeURIComponent(slug)}`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10000),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      if (d?.vendor) return d.vendor;
+    }
+  } catch { /* fall through */ }
 
-  // Fall back to profile endpoint with slug as _id (current backend supports this)
-  const res = await axios.get(`${API_BASE}/vendors/${slug}/profile`, { timeout: TIMEOUT });
-  return res.data?.vendor ?? null;
+  // 2. Try _id profile endpoint: GET /vendors/:slug/profile (works when slug is a MongoDB ObjectId)
+  try {
+    const r = await fetch(`${API}/vendors/${encodeURIComponent(slug)}/profile`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10000),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      if (d?.vendor) return d.vendor;
+    }
+  } catch { /* fall through */ }
+
+  return null;
 }
 
-async function fetchVendorProducts(vendorId: string) {
-  const res = await axios.get(`${API_BASE}/products`, {
-    params: { vendorId, limit: 100 },
-    timeout: TIMEOUT,
-  });
-  const raw = res.data?.data ?? res.data;
-  return Array.isArray(raw) ? raw : [];
+async function resolveProducts(vendorId: string): Promise<any[]> {
+  try {
+    const r = await fetch(
+      `${API}/products?vendorId=${encodeURIComponent(vendorId)}&limit=100`,
+      { cache: 'no-store', signal: AbortSignal.timeout(10000) }
+    );
+    if (!r.ok) return [];
+    const d = await r.json();
+    return Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  try {
-    const vendor = await fetchVendorBySlug(params.slug);
-    if (vendor) {
-      const name = `${vendor.firstName || ''} ${vendor.lastName || ''}`.trim() || vendor.email;
-      return {
-        title: `${name} — Glovia Marketplace`,
-        description: vendor.vendorDescription || `Shop products from ${name} on Glovia Marketplace Nepal.`,
-      };
-    }
-  } catch {
-    // ignore
+  const vendor = await resolveVendor(params.slug).catch(() => null);
+  if (vendor) {
+    const name = `${vendor.firstName || ''} ${vendor.lastName || ''}`.trim() || vendor.email;
+    return {
+      title: `${name} — Glovia Marketplace`,
+      description: vendor.vendorDescription || `Shop products from ${name} on Glovia Marketplace Nepal.`,
+    };
   }
   return { title: 'Vendor Store — Glovia Marketplace' };
 }
@@ -65,33 +65,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function VendorStorePage({ params }: Props) {
   const { slug } = params;
 
-  // Step 1: resolve vendor — 404 if not found
-  let vendor: any = null;
-  try {
-    vendor = await fetchVendorBySlug(slug);
-  } catch (err) {
-    if (isNextInternalError(err)) throw err;
-    console.warn(`[VendorStore] Profile fetch failed (${getServerErrorSummary(err)})`);
-    notFound();
-  }
-
+  const vendor = await resolveVendor(slug);
   if (!vendor) notFound();
 
-  // Step 2: fetch products using the vendor's _id — show empty store on error, never 404
   const vendorId = String(vendor._id || vendor.id || slug);
-  let products: any[] = [];
-  try {
-    products = await fetchVendorProducts(vendorId);
-  } catch (err) {
-    if (isNextInternalError(err)) throw err;
-    console.warn(`[VendorStore] Products fetch failed (${getServerErrorSummary(err)})`);
-  }
+  const products = await resolveProducts(vendorId);
 
-  return (
-    <VendorStoreContent
-      vendor={vendor}
-      products={products}
-      slug={slug}
-    />
-  );
+  return <VendorStoreContent vendor={vendor} products={products} slug={slug} />;
 }
