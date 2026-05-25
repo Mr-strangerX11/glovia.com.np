@@ -83,7 +83,7 @@ export default function AdminUsersPage() {
       setUsers(data?.data || data || []);
     } catch (err: any) {
       const msg = err?.response?.status === 403
-        ? 'Access denied — deploy the backend with ADMIN_IP_GUARD_DISABLED=true'
+        ? 'Access denied (403) — your IP is not whitelisted or session expired. Try logging out and back in.'
         : 'Failed to load users';
       setError(msg);
       toast.error(msg);

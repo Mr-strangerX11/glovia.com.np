@@ -89,7 +89,7 @@ export default function AdminProductsPage() {
       setProducts(rows);
     } catch (err: any) {
       const msg = err?.response?.status === 403
-        ? 'Access denied — backend needs ADMIN_IP_GUARD_DISABLED=true'
+        ? 'Access denied (403) — your IP is not whitelisted or session expired. Try logging out and back in.'
         : 'Failed to load products';
       setError(msg);
       toast.error(msg);
