@@ -21,7 +21,7 @@ export interface ApiResponse<T> {
 
 // Create axios instance
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://api.glovia.com.np/api/v1',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://backend.glovia.com.np/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },

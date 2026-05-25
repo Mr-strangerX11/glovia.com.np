@@ -15,7 +15,7 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const {
-    url = process.env.NEXT_PUBLIC_API_URL || 'https://api.glovia.com.np',
+    url = process.env.NEXT_PUBLIC_API_URL || 'https://backend.glovia.com.np',
     autoConnect = true,
     channels = [],
   } = options;

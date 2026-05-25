@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
   // Forward request to backend API
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.glovia.com.np';
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.glovia.com.np';
   const res = await fetch(`${backendUrl}/api/auditlog`, {
     headers: {
       'Content-Type': 'application/json',

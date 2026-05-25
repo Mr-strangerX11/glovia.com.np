@@ -17,7 +17,7 @@ export const useCategoryUpdates = (onUpdate?: (update: CategoryUpdate) => void) 
   useEffect(() => { onUpdateRef.current = onUpdate; }, [onUpdate]);
 
   useEffect(() => {
-    const socketUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'https://api.glovia.com.np';
+    const socketUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'https://backend.glovia.com.np';
 
     const newSocket = io(socketUrl, {
       transports: ['websocket', 'polling'],

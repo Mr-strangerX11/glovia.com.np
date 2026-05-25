@@ -60,7 +60,7 @@ export default function ImageUploadField({
           const rawBackendUrl =
             process.env.NEXT_PUBLIC_API_URL ||
             process.env.NEXT_PUBLIC_API_URLS ||
-            "https://api.glovia.com.np";
+            "https://backend.glovia.com.np";
           let backendUrl = rawBackendUrl.startsWith("http")
             ? rawBackendUrl
             : `https://${rawBackendUrl}`;

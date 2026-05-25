@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerErrorSummary } from '@/lib/serverError';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.glovia.com.np/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://backend.glovia.com.np/api/v1';
 
 export async function GET() {
   try {
