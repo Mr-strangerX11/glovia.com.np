@@ -12,7 +12,7 @@ const plans = [
   {
     icon: Repeat,
     name: 'Auto Replenish',
-    desc: 'Never run out of your essentials. Set a delivery schedule and we'll ship automatically.',
+    desc: "Never run out of your essentials. Set a delivery schedule and we'll ship automatically.",
     features: ['Monthly, bimonthly or custom schedule', 'Easy skip or pause', '5% replenishment discount'],
     color: 'from-violet-500 to-purple-600',
     highlight: true,
