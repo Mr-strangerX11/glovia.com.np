@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useMemo, useEffect } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { categoriesAPI, adminAPI } from '@/lib/api';
+import { categoriesAPI, vendorAPI } from '@/lib/api';
 import { Search, Award, Store, ArrowRight, Star, Package, Users } from 'lucide-react';
 
 const containerVariants = {
@@ -65,7 +65,7 @@ export default function VendorsContent({ vendors: initialVendors }: { vendors: a
     const fetchVendors = async () => {
       try {
         setIsLoading(true);
-        const res = await adminAPI.getAllVendors();
+        const res = await vendorAPI.getPublicVendors();
         const vendorList = Array.isArray(res.data?.data) ? res.data.data : Array.isArray(res.data) ? res.data : [];
         setVendors(vendorList);
       } catch {

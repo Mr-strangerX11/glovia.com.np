@@ -14,7 +14,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { Brand, Banner } from '@/types';
-import { newsletterAPI, adminAPI, flashDealsAPI, bannersAPI } from '@/lib/api';
+import { newsletterAPI, adminAPI, flashDealsAPI, bannersAPI, vendorAPI } from '@/lib/api';
 import { normalizeList } from '@/lib/utils';
 import { useHomePageRealtime } from '@/hooks/useHomePageRealtime';
 
@@ -164,7 +164,7 @@ export default function HomeContent({ brands, banners }: HomeContentProps) {
   // Refetch featured vendors on realtime update
   const refetchFeaturedVendors = useCallback(async () => {
     try {
-      const res = await adminAPI.getFeaturedVendors();
+      const res = await vendorAPI.getPublicFeaturedVendors();
       const vendors = res.data?.data || [];
       setFeaturedVendorsList(
         vendors.map((v: any) => ({
@@ -235,7 +235,7 @@ export default function HomeContent({ brands, banners }: HomeContentProps) {
   const heroBanners = useMemo(() => normalizeList<Banner>(banners), [banners]);
 
   useEffect(() => {
-    adminAPI.getFeaturedVendors().then((res) => {
+    vendorAPI.getPublicFeaturedVendors().then((res) => {
       const vendors = res.data?.data || [];
       setFeaturedVendorsList(
         vendors.map((v: any) => ({

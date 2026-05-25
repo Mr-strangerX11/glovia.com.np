@@ -290,6 +290,9 @@ export const vendorAPI = {
   bulkCreateProducts: (products: any[]) => api.post('/vendor/products/bulk', { products }),
   updateProduct: (id: string, data: any) => api.put(`/vendor/products/${id}`, data),
   deleteProduct: (id: string) => api.delete(`/vendor/products/${id}`),
+  // Public vendor list endpoints (no auth required)
+  getPublicVendors: () => api.get('/vendors'),
+  getPublicFeaturedVendors: () => api.get('/vendors/featured'),
 };
 
 // Payments API
