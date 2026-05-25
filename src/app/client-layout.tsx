@@ -7,6 +7,7 @@ import { useOnlineStatus } from '@/hooks/useInfiniteScroll';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import Footer from '@/components/layout/Footer';
 import AnnouncementBar from '@/components/common/AnnouncementBar';
+import { initCsrfToken } from '@/lib/csrf';
 
 // Lazy load Header to ensure router context is ready
 const Header = dynamic(() => import('@/components/layout/Header').then(mod => ({ default: mod.Header })), {
@@ -38,14 +39,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   };
 
   useEffect(() => {
-    // Seed CSRF token if not present (Double Submit Cookie pattern — attacker on another
-    // origin cannot read this cookie, so matching cookie+header proves same-origin).
-    if (!document.cookie.split(';').some(c => c.trim().startsWith('csrf_token='))) {
-      const token = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-      document.cookie = `csrf_token=${token}; path=/; SameSite=Lax`;
-    }
+    // Fetch the backend's CSRF token and cache it for all mutating requests.
+    // Cannot read it from document.cookie because it lives on backend.glovia.com.np
+    // (different subdomain — JS at glovia.com.np can't access it directly).
+    initCsrfToken();
   }, []);
 
   useEffect(() => {

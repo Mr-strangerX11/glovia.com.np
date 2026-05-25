@@ -1,17 +1,5 @@
 import axios from 'axios';
-
-function getCsrfToken(): string | undefined {
-  if (typeof document === 'undefined') return undefined;
-  const match = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('csrf_token='));
-  if (!match) return undefined;
-  try {
-    return decodeURIComponent(match.split('=')[1]);
-  } catch {
-    return match.split('=')[1];
-  }
-}
+import { getCsrfToken } from './csrf';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api/v1',

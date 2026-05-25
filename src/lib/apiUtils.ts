@@ -1,18 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { toast } from 'react-hot-toast';
-
-function getCsrfToken(): string | undefined {
-  if (typeof document === 'undefined') return undefined;
-  const match = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('csrf_token='));
-  if (!match) return undefined;
-  try {
-    return decodeURIComponent(match.split('=')[1]);
-  } catch {
-    return match.split('=')[1];
-  }
-}
+import { getCsrfToken } from './csrf';
 
 // Types for API responses
 export interface ApiError {

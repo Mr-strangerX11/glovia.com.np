@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authAPI } from '@/lib/api';
+import { initCsrfToken } from '@/lib/csrf';
 import { User } from '@/types';
 
 interface AuthState {
@@ -26,8 +27,10 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: true });
           const response = await authAPI.login({ email, password });
           const { user } = response.data;
-          // Server sets HttpOnly cookies; do not store tokens in JS-accessible cookies
+          // Server sets HttpOnly cookies; do not store tokens in JS-accessible cookies.
+          // Refresh CSRF token — backend issues a fresh one on every login.
           set({ user, isAuthenticated: true, isLoading: false });
+          initCsrfToken();
         } catch (error) {
           set({ isLoading: false });
           throw error;
