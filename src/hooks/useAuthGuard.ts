@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { User } from "@/types";
 
@@ -12,6 +12,7 @@ interface Options {
 
 export function useAuthGuard(options?: Options) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, isLoading, hydrate } = useAuthStore();
   const [checked, setChecked] = useState(false);
 
@@ -32,14 +33,18 @@ export function useAuthGuard(options?: Options) {
     const redirectTarget = options?.redirectTo || "/auth/login";
 
     if (!isAuthenticated) {
-      router.replace(redirectTarget);
+      if (pathname !== redirectTarget) {
+        router.replace(redirectTarget);
+      }
       return;
     }
 
     if (options?.roles && user && !options.roles.includes(user.role)) {
-      router.replace("/dashboard");
+      if (pathname !== "/dashboard") {
+        router.replace("/dashboard");
+      }
     }
-  }, [checked, isAuthenticated, options?.roles, options?.redirectTo, router, user]);
+  }, [checked, isAuthenticated, pathname, options?.roles, options?.redirectTo, router, user]);
 
   return {
     user,
