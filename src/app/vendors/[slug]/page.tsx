@@ -11,15 +11,29 @@ const TIMEOUT = 12000;
 
 type Props = { params: { slug: string } };
 
-// Re-throw Next.js internal errors (notFound, redirect) so they are never swallowed
 function isNextInternalError(err: unknown) {
   const digest = (err as any)?.digest ?? '';
   return typeof digest === 'string' && digest.startsWith('NEXT_');
 }
 
-// Resolve vendor by name slug ("kashi-chaudhary") or _id — calls GET /vendors/store/:slug
+/**
+ * Resolve vendor by slug — supports both:
+ *   - name slug   "kashi-chaudhary"  → GET /vendors/store/:slug  (after backend update)
+ *   - MongoDB _id "6a13f8..."        → GET /vendors/:id/profile  (current backend)
+ * Tries store endpoint first, falls back to profile endpoint so both work.
+ */
 async function fetchVendorBySlug(slug: string) {
-  const res = await axios.get(`${API_BASE}/vendors/store/${slug}`, { timeout: TIMEOUT });
+  // Try store endpoint (name slug lookup — works once backend is updated)
+  try {
+    const res = await axios.get(`${API_BASE}/vendors/store/${slug}`, { timeout: TIMEOUT });
+    const vendor = res.data?.vendor;
+    if (vendor) return vendor;
+  } catch {
+    // fall through to profile endpoint
+  }
+
+  // Fall back to profile endpoint with slug as _id (current backend supports this)
+  const res = await axios.get(`${API_BASE}/vendors/${slug}/profile`, { timeout: TIMEOUT });
   return res.data?.vendor ?? null;
 }
 
@@ -51,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function VendorStorePage({ params }: Props) {
   const { slug } = params;
 
-  // Step 1: resolve vendor by name slug — 404 if not found
+  // Step 1: resolve vendor — 404 if not found
   let vendor: any = null;
   try {
     vendor = await fetchVendorBySlug(slug);
@@ -63,7 +77,7 @@ export default async function VendorStorePage({ params }: Props) {
 
   if (!vendor) notFound();
 
-  // Step 2: fetch products using the vendor's actual _id — empty store on error, never 404
+  // Step 2: fetch products using the vendor's _id — show empty store on error, never 404
   const vendorId = String(vendor._id || vendor.id || slug);
   let products: any[] = [];
   try {
