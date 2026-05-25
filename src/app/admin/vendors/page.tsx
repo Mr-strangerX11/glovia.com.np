@@ -121,8 +121,7 @@ export default function AdminVendorsPage() {
     }
   };
 
-  const vendorSlug = (v: Vendor) =>
-    v.email.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  const vendorSlug = (v: Vendor) => v._id;
 
   const vendorName = (v: Vendor) =>
     [v.firstName, v.lastName].filter(Boolean).join(' ') || v.email;

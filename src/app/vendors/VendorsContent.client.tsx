@@ -206,7 +206,7 @@ export default function VendorsContent({ vendors: initialVendors }: { vendors: a
               const reviewCount = vendor.reviewCount;
               const productCount = vendor.productCount;
               const hasStats = rating !== undefined || reviewCount !== undefined || productCount !== undefined;
-              const vendorSlug = vendor.email?.toLowerCase().replace(/[^a-z0-9]/g, '-') || vendor.slug || vendor._id;
+              const vendorSlug = vendor._id || vendor.id || vendor.email?.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
               return (
                 <motion.div key={vendor._id || vendor.id || index} variants={itemVariants}>

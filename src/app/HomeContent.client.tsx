@@ -169,8 +169,8 @@ export default function HomeContent({ brands, banners }: HomeContentProps) {
       setFeaturedVendorsList(
         vendors.map((v: any) => ({
           id: v._id,
-          name: `${v.firstName} ${v.lastName}`,
-          slug: (v.email || '').toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          name: `${v.firstName || ''} ${v.lastName || ''}`.trim() || v.email,
+          slug: v._id,
           logo: v.vendorLogo,
           description: v.vendorDescription,
         })).slice(0, 8)
@@ -240,8 +240,8 @@ export default function HomeContent({ brands, banners }: HomeContentProps) {
       setFeaturedVendorsList(
         vendors.map((v: any) => ({
           id: v._id,
-          name: `${v.firstName} ${v.lastName}`,
-          slug: (v.email || '').toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          name: `${v.firstName || ''} ${v.lastName || ''}`.trim() || v.email,
+          slug: v._id,
           logo: v.vendorLogo,
           description: v.vendorDescription,
         })).slice(0, 8)

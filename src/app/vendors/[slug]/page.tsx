@@ -1,9 +1,8 @@
 import axios from "axios";
-import { fetchProducts } from "@/lib/serverApi";
-import { getServerErrorSummary } from "@/lib/serverError";
-import VendorStoreContent from "./VendorStoreContent.client";
 import { notFound } from "next/navigation";
 import type { Metadata } from 'next';
+import VendorStoreContent from "./VendorStoreContent.client";
+import { getServerErrorSummary } from "@/lib/serverError";
 
 export const dynamic = "force-dynamic";
 
@@ -11,14 +10,22 @@ const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://backend.glovia.com
 
 type Props = { params: { slug: string } };
 
-async function fetchVendorBySlug(slug: string) {
-  const res = await axios.get(`${API_BASE}/vendors/store/${slug}`);
+async function fetchVendorProfile(vendorId: string) {
+  const res = await axios.get(`${API_BASE}/vendors/${vendorId}/profile`);
   return res.data?.vendor ?? null;
+}
+
+async function fetchVendorProducts(vendorId: string) {
+  const res = await axios.get(`${API_BASE}/products`, {
+    params: { vendorId, limit: 100 },
+  });
+  // /products returns { data: [...], meta: {...} }
+  return res.data?.data ?? res.data ?? [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
-    const vendor = await fetchVendorBySlug(params.slug);
+    const vendor = await fetchVendorProfile(params.slug);
     if (vendor) {
       const name = `${vendor.firstName || ''} ${vendor.lastName || ''}`.trim() || vendor.email;
       return {
@@ -29,22 +36,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   } catch {
     // ignore
   }
-  return { title: `Vendor Store — Glovia Marketplace` };
+  return { title: 'Vendor Store — Glovia Marketplace' };
 }
 
 export default async function VendorStorePage({ params }: Props) {
   const { slug } = params;
 
   try {
-    const vendor = await fetchVendorBySlug(slug);
+    const [vendor, products] = await Promise.all([
+      fetchVendorProfile(slug),
+      fetchVendorProducts(slug),
+    ]);
 
-    if (!vendor) {
-      notFound();
-    }
-
-    const vendorId = vendor._id?.toString();
-    const productsResult = await fetchProducts({ vendorId, limit: 100 });
-    const products = Array.isArray(productsResult) ? productsResult : productsResult?.data ?? [];
+    if (!vendor) notFound();
 
     return (
       <VendorStoreContent
