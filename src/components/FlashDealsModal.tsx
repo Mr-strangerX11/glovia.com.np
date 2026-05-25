@@ -36,20 +36,15 @@ export default function FlashDealsModal() {
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [loading, setLoading] = useState(true);
 
-  // Fetch flash deals
+  // Fetch flash deals — show on every page load when deals are active
   useEffect(() => {
-    const hasSeenFlashDeals = localStorage.getItem('flashDealsModalSeen');
-    
     fetch(API_BASE_INTERNAL)
       .then(res => res.ok ? res.json() : { data: [] })
       .then(json => {
         const activeDeals = json?.data || [];
         if (activeDeals.length > 0) {
           setDeals(activeDeals);
-          if (!hasSeenFlashDeals) {
-            setIsOpen(true);
-            localStorage.setItem('flashDealsModalSeen', 'true');
-          }
+          setIsOpen(true);
         }
       })
       .catch(() => setDeals([]))
