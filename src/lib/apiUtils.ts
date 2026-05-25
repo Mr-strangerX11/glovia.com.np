@@ -36,7 +36,7 @@ api.interceptors.request.use(
       const csrfToken = Cookies.get('csrf_token');
       if (csrfToken) {
         config.headers = config.headers || {};
-        config.headers['X-CSRF-Token'] = csrfToken;
+        config.headers['x-csrf-token'] = csrfToken;
       }
     }
     
