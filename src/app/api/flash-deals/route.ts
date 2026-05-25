@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const res = await fetch(`${API_BASE}/flash-deals/active`, {
       headers: { 'Content-Type': 'application/json' },
-      next: { revalidate: 30 },
+      cache: 'no-store',
     });
     if (!res.ok) return NextResponse.json({ data: [] });
     return NextResponse.json(await res.json());
