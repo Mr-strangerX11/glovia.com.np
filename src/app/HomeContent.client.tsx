@@ -170,7 +170,7 @@ export default function HomeContent({ brands, banners }: HomeContentProps) {
         vendors.map((v: any) => ({
           id: v._id,
           name: `${v.firstName || ''} ${v.lastName || ''}`.trim() || v.email,
-          slug: v._id,
+          slug: v.slug || v._id,
           logo: v.vendorLogo,
           description: v.vendorDescription,
         })).slice(0, 8)
@@ -241,7 +241,7 @@ export default function HomeContent({ brands, banners }: HomeContentProps) {
         vendors.map((v: any) => ({
           id: v._id,
           name: `${v.firstName || ''} ${v.lastName || ''}`.trim() || v.email,
-          slug: v._id,
+          slug: v.slug || v._id,
           logo: v.vendorLogo,
           description: v.vendorDescription,
         })).slice(0, 8)

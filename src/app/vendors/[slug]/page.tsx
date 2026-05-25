@@ -11,14 +11,15 @@ const TIMEOUT = 12000;
 
 type Props = { params: { slug: string } };
 
-// Re-throw Next.js internal errors (notFound, redirect) so they aren't swallowed
+// Re-throw Next.js internal errors (notFound, redirect) so they are never swallowed
 function isNextInternalError(err: unknown) {
   const digest = (err as any)?.digest ?? '';
   return typeof digest === 'string' && digest.startsWith('NEXT_');
 }
 
-async function fetchVendorProfile(vendorId: string) {
-  const res = await axios.get(`${API_BASE}/vendors/${vendorId}/profile`, { timeout: TIMEOUT });
+// Resolve vendor by name slug ("kashi-chaudhary") or _id — calls GET /vendors/store/:slug
+async function fetchVendorBySlug(slug: string) {
+  const res = await axios.get(`${API_BASE}/vendors/store/${slug}`, { timeout: TIMEOUT });
   return res.data?.vendor ?? null;
 }
 
@@ -33,7 +34,7 @@ async function fetchVendorProducts(vendorId: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
-    const vendor = await fetchVendorProfile(params.slug);
+    const vendor = await fetchVendorBySlug(params.slug);
     if (vendor) {
       const name = `${vendor.firstName || ''} ${vendor.lastName || ''}`.trim() || vendor.email;
       return {
@@ -50,10 +51,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function VendorStorePage({ params }: Props) {
   const { slug } = params;
 
-  // Step 1: fetch vendor profile — 404 if not found or backend error
+  // Step 1: resolve vendor by name slug — 404 if not found
   let vendor: any = null;
   try {
-    vendor = await fetchVendorProfile(slug);
+    vendor = await fetchVendorBySlug(slug);
   } catch (err) {
     if (isNextInternalError(err)) throw err;
     console.warn(`[VendorStore] Profile fetch failed (${getServerErrorSummary(err)})`);
@@ -62,10 +63,11 @@ export default async function VendorStorePage({ params }: Props) {
 
   if (!vendor) notFound();
 
-  // Step 2: fetch products — show empty store on error, never 404
+  // Step 2: fetch products using the vendor's actual _id — empty store on error, never 404
+  const vendorId = String(vendor._id || vendor.id || slug);
   let products: any[] = [];
   try {
-    products = await fetchVendorProducts(slug);
+    products = await fetchVendorProducts(vendorId);
   } catch (err) {
     if (isNextInternalError(err)) throw err;
     console.warn(`[VendorStore] Products fetch failed (${getServerErrorSummary(err)})`);
