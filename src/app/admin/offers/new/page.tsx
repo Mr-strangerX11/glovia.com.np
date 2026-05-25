@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { ChevronLeft, ChevronRight, Save, Eye, Check, AlertCircle } from 'lucide-react';
 import { CreateOfferPayload, OfferStatus, OfferType, DiscountType } from '@/types/offer';
 
@@ -12,6 +13,7 @@ interface FormState extends CreateOfferPayload {
 }
 
 export default function CreateOfferPage() {
+  useAuthGuard({ roles: ['ADMIN', 'SUPER_ADMIN'] });
   const [form, setForm] = useState<Partial<FormState>>({
     step: 1,
     name: '',

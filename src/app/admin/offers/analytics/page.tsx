@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { ChevronLeft, TrendingUp, Users, ShoppingBag, BarChart3 } from 'lucide-react';
 import StatsCard from '@/components/admin/StatsCard';
 
@@ -29,6 +30,7 @@ const chartData = {
 };
 
 export default function AnalyticsPage() {
+  useAuthGuard({ roles: ['ADMIN', 'SUPER_ADMIN'] });
   const [dateRange, setDateRange] = useState('last7days');
 
   const stats = {

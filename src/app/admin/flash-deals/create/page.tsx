@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { Button, Input, TextArea } from '@/components/ui';
 import toast from 'react-hot-toast';
 import { flashDealsAPI, uploadAPI, productsAPI } from '@/lib/api';
@@ -11,6 +12,7 @@ import { motion } from 'framer-motion';
 import { mutate } from 'swr';
 
 export default function CreateFlashDealPage() {
+  useAuthGuard({ roles: ['ADMIN', 'SUPER_ADMIN'] });
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);

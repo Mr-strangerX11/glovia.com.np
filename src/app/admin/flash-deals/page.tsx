@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
 import toast from 'react-hot-toast';
@@ -28,6 +29,7 @@ type FlashDeal = {
 };
 
 export default function FlashDealsManagementPage() {
+  useAuthGuard({ roles: ['ADMIN', 'SUPER_ADMIN'] });
   const [deals, setDeals] = useState<FlashDeal[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);

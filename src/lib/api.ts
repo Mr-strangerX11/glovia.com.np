@@ -276,6 +276,11 @@ export const adminAPI = {
   getAllVendors: () => api.get('/admin/vendors'),
   getFeaturedVendors: () => api.get('/admin/vendors/featured'),
   toggleVendorFeatured: (vendorId: string) => api.patch(`/admin/vendors/${vendorId}/featured`),
+  // Popups
+  getPopups: () => api.get('/popups'),
+  createPopup: (data: any) => api.post('/popups', data),
+  updatePopup: (id: string, data: any) => api.put(`/popups/${id}`, data),
+  deletePopup: (id: string) => api.delete(`/popups/${id}`),
 };
 
 // Vendor API

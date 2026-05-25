@@ -1,7 +1,7 @@
 "use client";
 
-
 import React, { useMemo } from "react";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { motion } from "framer-motion";
 import { useAnalyticsOverview, useSalesAnalytics, useRevenueAnalytics, useTopProducts, useTopCustomers, useOrdersStats } from "@/hooks/useAnalytics";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from "@/components/Charts";
@@ -20,6 +20,7 @@ const PIE_COLORS = ["#5f6fff", "#10b981", "#f59e0b", "#8b5cf6", "#f43f5e", "#0ea
 const formatCurrency = (value: number) => `NPR ${Number(value || 0).toLocaleString()}`;
 
 export default function AdminAnalyticsDashboard() {
+  useAuthGuard({ roles: ["ADMIN", "SUPER_ADMIN"] });
   const { overview, isLoading: loadingOverview } = useAnalyticsOverview();
   const { sales, isLoading: loadingSales } = useSalesAnalytics();
   const { revenue, isLoading: loadingRevenue } = useRevenueAnalytics();
