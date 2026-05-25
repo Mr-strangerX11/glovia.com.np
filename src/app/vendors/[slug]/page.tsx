@@ -1,4 +1,4 @@
-import { adminAPI } from "@/lib/api";
+import axios from "axios";
 import { fetchProducts } from "@/lib/serverApi";
 import { getServerErrorSummary } from "@/lib/serverError";
 import VendorStoreContent from "./VendorStoreContent.client";
@@ -7,16 +7,18 @@ import type { Metadata } from 'next';
 
 export const dynamic = "force-dynamic";
 
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://backend.glovia.com.np/api/v1').replace(/\/+$/, '');
+
 type Props = { params: { slug: string } };
+
+async function fetchVendorBySlug(slug: string) {
+  const res = await axios.get(`${API_BASE}/vendors/store/${slug}`);
+  return res.data?.vendor ?? null;
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
-    const { data } = await adminAPI.getAllVendors();
-    const vendors = Array.isArray(data) ? data : data?.data ?? [];
-    const vendor = vendors.find((v: any) => {
-      const emailSlug = (v.email || '').toLowerCase().replace(/[^a-z0-9]/g, '-');
-      return emailSlug === params.slug;
-    });
+    const vendor = await fetchVendorBySlug(params.slug);
     if (vendor) {
       const name = `${vendor.firstName || ''} ${vendor.lastName || ''}`.trim() || vendor.email;
       return {
@@ -25,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       };
     }
   } catch {
-    return { title: `Vendor Store — Glovia Marketplace` };
+    // ignore
   }
   return { title: `Vendor Store — Glovia Marketplace` };
 }
@@ -33,44 +35,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function VendorStorePage({ params }: Props) {
   const { slug } = params;
 
-  let vendor: any = null;
-  let products: any[] = [];
-
-  // Fetch all vendors and find by slug
   try {
-    const vendorsResult = await adminAPI.getAllVendors();
-    const vendors = Array.isArray(vendorsResult?.data) ? vendorsResult.data : vendorsResult?.data?.data ?? [];
-
-    vendor = vendors.find((v: any) => {
-      const emailSlug = (v.email || '').toLowerCase().replace(/[^a-z0-9]/g, '-');
-      return emailSlug === slug;
-    });
+    const vendor = await fetchVendorBySlug(slug);
 
     if (!vendor) {
-      console.warn(`[VendorStore] Vendor not found for slug: ${slug}`);
       notFound();
     }
 
-    // Fetch products by vendor email
-    const productsResult = await fetchProducts({ brand: vendor.email, limit: 50 });
-    products = Array.isArray(productsResult) ? productsResult : productsResult?.data ?? [];
+    const vendorId = vendor._id?.toString();
+    const productsResult = await fetchProducts({ vendorId, limit: 100 });
+    const products = Array.isArray(productsResult) ? productsResult : productsResult?.data ?? [];
 
-    // Also fetch all products for the "View All" option
-    const allProductsResult = await fetchProducts({ limit: 100 });
-    const allProducts = Array.isArray(allProductsResult) ? allProductsResult : allProductsResult?.data ?? [];
-    
     return (
-      <VendorStoreContent 
-        vendor={vendor} 
-        products={products} 
-        allProducts={allProducts}
-        slug={slug} 
+      <VendorStoreContent
+        vendor={vendor}
+        products={products}
+        slug={slug}
       />
     );
   } catch (err) {
     console.warn(`[VendorStore] Fetch failed (${getServerErrorSummary(err)})`);
     notFound();
   }
-
-  if (!vendor) notFound();
 }

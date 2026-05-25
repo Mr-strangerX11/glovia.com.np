@@ -106,27 +106,24 @@ function ProductImage({
 type Props = {
   vendor: any;
   products: Product[];
-  allProducts?: Product[];
   slug: string;
 };
 
-export default function VendorStoreContent({ vendor, products, allProducts = [], slug }: Props) {
+export default function VendorStoreContent({ vendor, products, slug }: Props) {
   const [sort, setSort] = useState<SortOption>('default');
   const [sortOpen, setSortOpen] = useState(false);
   const [addingId, setAddingId] = useState<string | null>(null);
-  const [showAllProducts, setShowAllProducts] = useState(false);
   const { mutate: mutateCart } = useCart();
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
 
   const sorted = useMemo(() => {
-    const displayProducts = showAllProducts && allProducts.length > 0 ? allProducts : products;
-    const list = [...displayProducts];
+    const list = [...products];
     if (sort === 'price-asc') list.sort((a, b) => Number(a.price) - Number(b.price));
     if (sort === 'price-desc') list.sort((a, b) => Number(b.price) - Number(a.price));
     if (sort === 'name-asc') list.sort((a, b) => a.name.localeCompare(b.name));
     return list;
-  }, [products, allProducts, sort, showAllProducts]);
+  }, [products, sort]);
 
   const handleAddToCart = async (product: Product) => {
     if (!isAuthenticated) {
@@ -237,7 +234,7 @@ export default function VendorStoreContent({ vendor, products, allProducts = [],
         <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {showAllProducts ? 'All Products' : `${vendorName}'s Products`}
+              {vendorName}'s Products
             </h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {sorted.length} {sorted.length === 1 ? 'product' : 'products'} available
@@ -245,19 +242,6 @@ export default function VendorStoreContent({ vendor, products, allProducts = [],
           </div>
 
           <div className="flex items-center gap-3">
-            {allProducts.length > 0 && (
-              <button
-                onClick={() => setShowAllProducts(!showAllProducts)}
-                className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-                  showAllProducts
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-                }`}
-              >
-                {showAllProducts ? 'All Products' : 'Vendor Products'}
-              </button>
-            )}
-
             {/* Sort dropdown */}
           <div className="relative">
             <button

@@ -10,6 +10,7 @@ const API_BASE = normalizedApiBase.includes("/api/")
 type ProductQuery = {
   category?: string;
   brand?: string;
+  vendorId?: string;
   search?: string;
   page?: number;
   limit?: number;
@@ -28,10 +29,11 @@ function extractProducts(payload: unknown): any[] {
   return [];
 }
 
-export async function fetchProducts({ category, brand, search, page, limit }: ProductQuery) {
-  const params: ProductQuery = {};
+export async function fetchProducts({ category, brand, vendorId, search, page, limit }: ProductQuery) {
+  const params: Record<string, any> = {};
   if (category) params.category = category;
   if (brand) params.brand = brand;
+  if (vendorId) params.vendorId = vendorId;
   if (search) params.search = search;
   if (page) params.page = page;
   if (limit) params.limit = limit;

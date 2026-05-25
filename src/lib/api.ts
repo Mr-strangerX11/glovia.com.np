@@ -269,10 +269,12 @@ export const adminAPI = {
   createBanner: (data: any) => api.post('/admin/banners', data),
   updateBanner: (id: string, data: any) => api.put(`/admin/banners/${id}`, data),
   deleteBanner: (id: string) => api.delete(`/admin/banners/${id}`),
-  // Vendors - Featured Management
+  // Vendors - Management
   getAllVendors: () => api.get('/admin/vendors'),
   getFeaturedVendors: () => api.get('/admin/vendors/featured'),
   toggleVendorFeatured: (vendorId: string) => api.patch(`/admin/vendors/${vendorId}/featured`),
+  freezeVendor: (vendorId: string, reason?: string) => api.post(`/admin/vendors/${vendorId}/freeze`, { reason }),
+  unfreezeVendor: (vendorId: string) => api.post(`/admin/vendors/${vendorId}/unfreeze`),
   // Popups
   getPopups: () => api.get('/popups'),
   createPopup: (data: any) => api.post('/popups', data),
