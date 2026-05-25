@@ -1,4 +1,4 @@
-const CACHE_NAME = 'glovia-v3';
+const CACHE_NAME = 'glovia-v4';
 const OFFLINE_URL = '/offline';
 
 const STATIC_ASSETS = [
@@ -51,9 +51,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip API and Next.js runtime assets - always network
+  // Skip API and Next.js runtime assets - always network, never cache
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/_next/')) {
-    event.respondWith(fetch(request));
+    event.respondWith(
+      fetch(request).catch(() => {
+        // Return a proper network error so the browser handles it, not the SW
+        return new Response(null, { status: 503, statusText: 'Service Unavailable' });
+      })
+    );
     return;
   }
 

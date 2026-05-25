@@ -16,10 +16,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [redirectUrl, setRedirectUrl] = useState<string>("/dashboard");
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const redirect = searchParams?.get("redirect");
     if (redirect && typeof redirect === "string" && redirect.startsWith("/")) {
       setRedirectUrl(redirect);
@@ -37,10 +35,6 @@ export default function LoginPage() {
       setError(Array.isArray(message) ? message.join(", ") : message);
     }
   };
-
-  if (!mounted) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen flex">

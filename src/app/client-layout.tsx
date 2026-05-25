@@ -34,8 +34,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     const key = '__chunk_reload_once__';
     if (sessionStorage.getItem(key) === '1') return;
     sessionStorage.setItem(key, '1');
-    const separator = window.location.search ? '&' : '?';
-    window.location.replace(`${window.location.href}${separator}v=${Date.now()}`);
+    // Brief delay so any in-progress auth state is flushed before reload
+    setTimeout(() => {
+      const separator = window.location.search ? '&' : '?';
+      window.location.replace(`${window.location.href}${separator}v=${Date.now()}`);
+    }, 800);
   };
 
   useEffect(() => {
